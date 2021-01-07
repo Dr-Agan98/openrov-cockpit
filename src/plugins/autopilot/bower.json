@@ -1,0 +1,11 @@
+{
+  "name": "openrov-plugin-autopilot",
+  "description": "The best project ever.",
+  "version": "0.0.0",
+  "homepage": "",
+  "main": "public/js/autopilot.js",
+  "keywords": [
+    "openrov",
+    "plugin"
+  ]
+}
