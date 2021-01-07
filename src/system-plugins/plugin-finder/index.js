@@ -30,6 +30,13 @@ pluginFinder.prototype.start = function start() {
                 var list = listing.dependencies;
                 bower.commands.search('openrov-plugin-' + name, {})
                     .on('end', function(results) {
+                        res_list=[];
+                        for (var result in results) {
+                            if ((results[result].name).includes("openrov-plugin-") ) {
+                                res_list.push(results[result]);
+                            }
+                        }
+                        results = res_list;
                         for (var result in results) {
                             if (results[result].name in list) {
                                 results[result].InstalledOnROV = true;
