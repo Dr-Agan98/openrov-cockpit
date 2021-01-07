@@ -105,7 +105,7 @@
     this.positions.lift = 0;
     this.positions.pitch = 0;
     this.positions.roll = 0;
-    this.postitions.strafe = 0;
+    this.positions.strafe = 0;
   };
   ROVPilot.prototype.sendPilotingData = function () {
     var self = this;
