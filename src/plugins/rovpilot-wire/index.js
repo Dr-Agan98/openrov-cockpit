@@ -67,7 +67,7 @@
             'description' : 'The ROV will automatically hold heading and depth when the pilot finishes manuvering',
             'type': 'boolean',
             'format': 'checkbox',
-            'default': false
+            'default': true
           }
         }
       }];
