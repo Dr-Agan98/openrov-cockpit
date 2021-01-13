@@ -13,6 +13,7 @@
 
             this.settings = {};
             this.instructions = [];
+            this.currentTaskIndex = -1;
             this.timersId = { 'interval':[], 'timeout':[] };
             this.navigationData = {};
             this.depthHoldState = {enabled:false, targetDepth: null};
@@ -49,8 +50,12 @@
 
             this.nextInstruction = function(){
               if(self.instructions.length > 0){
+                self.currentTaskIndex += 1;
+                self.cockpitBus.emit('plugin.autopilot.task-state', 'running', self.currentTaskIndex);
                 var instr = self.instructions.pop();
                 self.parseInstruction(instr);      
+              }else{
+                self.currentTaskIndex = -1;
               }
             }
 
@@ -191,6 +196,7 @@
                   //TODO: Set acceptable error during turning
                   if(degreesTurned >= (degrees*0.96)){
                     self.cockpitBus.emit('plugin.rovpilot.allStop');
+                    self.cockpitBus.emit('plugin.autopilot.task-state', 'completed', self.currentTaskIndex);
                     clearInterval(idInterval);
                     self.setHeadingHold( true );
 
@@ -209,6 +215,7 @@
                   //TODO: Set acceptable error during ascent/descent
                   if(metersMoved >= (meters*0.96)){
                     self.cockpitBus.emit('plugin.rovpilot.allStop');
+                    self.cockpitBus.emit('plugin.autopilot.task-state', 'completed', self.currentTaskIndex);
                     clearInterval(idInterval);
                     self.setDepthHold(true);
 
@@ -226,6 +233,8 @@
                   //TODO: Set acceptable error during forward moving
                   if(timeElapsed >= (self.distanceToTime(meters) * 0.96)){
                     self.cockpitBus.emit('plugin.rovpilot.allStop');
+                    console.log("Completed");
+                    self.cockpitBus.emit('plugin.autopilot.task-state', 'completed', self.currentTaskIndex);
                     clearInterval(idInterval);
 
                     var idTimeout = setTimeout(function(){
@@ -239,7 +248,7 @@
                       self.cockpitBus.emit('plugin.rovpilot.allStop');
 
                       var idTimeout = setTimeout(function(){
-                        
+
                         var newIdInterval = setInterval(function(){
                           self.cockpitBus.emit('plugin.autopilot.checkDistance', initialTime, meters, timeOffset + self.settings.stabilization_time + self.settings.checking_interval, newIdInterval);
                         }, self.settings.checking_interval); 
@@ -258,6 +267,7 @@
                 {
                   setImmediate(function(){
                     self.instructions = [];
+                    self.currentTaskIndex = -1;
                     self.cockpitBus.emit('plugin.rovpilot.allStop');
                     while(self.timersId.interval.length > 0){
                       clearInterval(self.timersId.interval.pop());

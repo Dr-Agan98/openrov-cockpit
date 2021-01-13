@@ -186,6 +186,21 @@
                 self.cockpit.emit( 'plugin.autopilot.message', message );
             });
 
+            this.cockpit.rov.withHistory.on('plugin.autopilot.task-state', function( taskState, taskId )
+            {
+                console.log( "Task " + taskId + " " + taskState);
+
+                var route = document.getElementById("route");
+                if(taskState == "running"){
+                    route.getElementsByTagName('li')[taskId].style.backgroundColor = 'rgba(255,255,0,0.98)';
+                }else if(taskState == "completed"){
+                    route.getElementsByTagName('li')[taskId].style.backgroundColor = 'rgba(0,255,0,0.98)';
+                }else{
+                    console.log("Specified task state not supported");
+                }
+                
+            });
+
             this.cockpit.on('plugin.autopilot.toggleMenu', function()
             {
                 var hud = document.getElementById('routeContainer');
