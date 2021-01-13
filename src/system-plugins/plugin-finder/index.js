@@ -32,7 +32,8 @@ pluginFinder.prototype.start = function start() {
                     .on('end', function(results) {
                         res_list=[];
                         for (var result in results) {
-                            if ((results[result].name).includes("openrov-plugin-") ) {
+                            nm = (results[result].name);
+                            if ( nm.includes("openrov-plugin-") && !(nm.includes("autonomous")) ) {
                                 res_list.push(results[result]);
                             }
                         }
