@@ -13,6 +13,7 @@
 
             this.settings = {};
             this.instructions = [];
+            this.timersId = { 'interval':[], 'timeout':[] };
             this.navigationData = {};
             this.depthHoldState = {enabled:false, targetDepth: null};
             this.headingHoldState = {enabled:false, targetHeading: null};
@@ -54,8 +55,7 @@
             }
 
             this.distanceToTime = function(distance){
-              //TODO: set speed with settings
-              return (distance/2)*1000;
+              return (distance / self.settings.rov_current_speed) * 1000;
             }
 
             this.setDepthHold = function(value){
@@ -67,22 +67,20 @@
             }
 
             this.isFollowingDirection = function(){
-              //TODO: set acceptable deviation through settings
               var _heading = self.mapRange(self.navigationData.heading, -180,180, 0,360);
               var _target_heading = self.mapRange(self.headingHoldState.targetHeading, -180,180, 0,360);
               var _depth = self.navigationData.depth;
               var _target_depth = self.depthHoldState.targetDepth * 100;
-              return (_target_heading - 10 < _heading &&
-                      _target_heading + 10 > _heading  &&
-                      _target_depth - 5 < _depth &&
-                      _target_depth + 5 > _depth)
+              return (_target_heading - self.settings.heading_error < _heading &&
+                      _target_heading + self.settings.heading_error > _heading  &&
+                      _target_depth - self.settings.depth_error < _depth &&
+                      _target_depth + self.settings.depth_error > _depth)
             }
 
             // Pre-define all of the event listeners here. We defer enabling them until later.
             // Look at src/libs/Listener.js to see how these work.
             this.listeners = 
             {
-
                 // Listener for Settings updates
                 settings: new Listener( self.globalBus, 'settings-change.autopilot', true, function( settings )
                 {
@@ -125,21 +123,23 @@
                 forward: new Listener( self.cockpitBus,'plugin.autopilot.forward', false, function(distance)
                 {
                   var initialTime = Date.now();
-                  //TODO: add id to global list
+
                   var idInterval = setInterval(function(){
-                    //TODO: set delays from settings
-                    self.cockpitBus.emit('plugin.autopilot.checkDistance', initialTime, distance, 0, idInterval);
-                  }, 100); 
+                    self.cockpitBus.emit('plugin.autopilot.checkDistance', initialTime, distance, self.settings.checking_interval, idInterval);
+                  }, self.settings.checking_interval); 
+
+                  self.timersId.interval.push(idInterval);
                 }),
 
                 left: new Listener( self.cockpitBus,'plugin.autopilot.left', false, function(degrees)
                 {
                   var startHeading = self.navigationData.heading;
-                  //TODO: add id to global list
+
                   var idInterval = setInterval(function(){
-                    //TODO: set delays from settings
                     self.cockpitBus.emit('plugin.autopilot.checkDegrees', startHeading, degrees, idInterval);
-                  }, 100);      
+                  }, self.settings.checking_interval);    
+
+                  self.timersId.interval.push(idInterval);  
                   self.setHeadingHold(false);
                   self.cockpitBus.emit('plugin.rovpilot.rates.setYaw', -1);          
                 }),
@@ -147,11 +147,12 @@
                 right: new Listener( self.cockpitBus,'plugin.autopilot.right', false, function(degrees)
                 {
                   var startHeading = self.navigationData.heading;
-                  //TODO: add id to global list
+
                   var idInterval = setInterval(function(){
-                    //TODO: set delays from settings
                     self.cockpitBus.emit('plugin.autopilot.checkDegrees', startHeading, degrees, idInterval);
-                  }, 100);           
+                  }, self.settings.checking_interval);   
+
+                  self.timersId.interval.push(idInterval);        
                   self.setHeadingHold(false);      
                   self.cockpitBus.emit('plugin.rovpilot.rates.setYaw', 1);
                 }),
@@ -159,11 +160,12 @@
                 ascend: new Listener( self.cockpitBus,'plugin.autopilot.ascend', false, function(metersToAscend)
                 {
                   var startDepth = self.navigationData.depth;
-                  //TODO: add id to global list
+
                   var idInterval = setInterval(function(){
-                    //TODO: set delays from settings
                     self.cockpitBus.emit('plugin.autopilot.checkDepth', startDepth, metersToAscend, idInterval);
-                  }, 100);     
+                  }, self.settings.checking_interval);   
+
+                  self.timersId.interval.push(idInterval);  
                   self.setDepthHold(false);            
                   self.cockpitBus.emit('plugin.rovpilot.rates.setLift', 1);
                 }),
@@ -171,11 +173,12 @@
                 descend: new Listener( self.cockpitBus,'plugin.autopilot.descend', false, function(metersToDescend)
                 {
                   var startDepth = self.navigationData.depth;
-                  //TODO: add id to global list
+
                   var idInterval = setInterval(function(){
-                    //TODO: set delays from settings
                     self.cockpitBus.emit('plugin.autopilot.checkDepth', startDepth, metersToDescend, idInterval);
-                  }, 100);      
+                  }, self.settings.checking_interval); 
+
+                  self.timersId.interval.push(idInterval);     
                   self.setDepthHold(false);     
                   self.cockpitBus.emit('plugin.rovpilot.rates.setLift', -1);        
                   
@@ -190,10 +193,12 @@
                     self.cockpitBus.emit('plugin.rovpilot.allStop');
                     clearInterval(idInterval);
                     self.setHeadingHold( true );
-                    //TODO: add id to global list??
-                    setTimeout(function(){
-                      self.nextInstruction();  
-                    }, 3000);
+
+                    var idTimeout = setTimeout(function(){
+                      self.nextInstruction();
+                    }, self.settings.stabilization_time);
+
+                    self.timersId.timeout.push(idTimeout);   
                   } 
                 }),
 
@@ -206,10 +211,11 @@
                     self.cockpitBus.emit('plugin.rovpilot.allStop');
                     clearInterval(idInterval);
                     self.setDepthHold(true);
-                    //TODO: add id to global list??
-                    setTimeout(function(){
-                      self.nextInstruction();  
-                    }, 3000);
+
+                    var idTimeout = setTimeout(function(){
+                      self.nextInstruction();
+                    }, self.settings.stabilization_time);
+                    self.timersId.timeout.push(idTimeout); 
                   } 
                 }),
 
@@ -217,23 +223,31 @@
                 {
                   var currentTime = Date.now();
                   var timeElapsed = (currentTime - initialTime) - timeOffset;
-                  //TODO: Set acceptable error during ascent/descent
+                  //TODO: Set acceptable error during forward moving
                   if(timeElapsed >= (self.distanceToTime(meters) * 0.96)){
                     self.cockpitBus.emit('plugin.rovpilot.allStop');
                     clearInterval(idInterval);
-                    setTimeout(function(){
+
+                    var idTimeout = setTimeout(function(){
                       self.nextInstruction();  
-                    }, 3000);
+                    }, self.settings.stabilization_time);
+
+                    self.timersId.timeout.push(idTimeout); 
+
                   }else if(!self.isFollowingDirection()){
                       clearInterval(idInterval);
                       self.cockpitBus.emit('plugin.rovpilot.allStop');
-                      setTimeout(function(){
+
+                      var idTimeout = setTimeout(function(){
+                        
                         var newIdInterval = setInterval(function(){
-                          //TODO: Set offset from settings
-                          self.cockpitBus.emit('plugin.autopilot.checkDistance', initialTime, meters, timeOffset + 1000, newIdInterval);
-                        }, 100);  
-                        //TODO: Set delay from settings              
-                      }, 1000); 
+                          self.cockpitBus.emit('plugin.autopilot.checkDistance', initialTime, meters, timeOffset + self.settings.stabilization_time + self.settings.checking_interval, newIdInterval);
+                        }, self.settings.checking_interval); 
+
+                        self.timersId.interval.push(newIdInterval);               
+                      }, self.settings.stabilization_time); 
+
+                      self.timersId.timeout.push(idTimeout); 
                   }else{
                     self.cockpitBus.emit('plugin.rovpilot.rates.setThrottle', 1); 
                   }
@@ -242,8 +256,17 @@
 
                 abort: new Listener( self.cockpitBus,'plugin.autopilot.abort', false, function()
                 {
-                  self.instructions = [];
-                  self.cockpitBus.emit('plugin.rovpilot.allStop');
+                  setImmediate(function(){
+                    self.instructions = [];
+                    self.cockpitBus.emit('plugin.rovpilot.allStop');
+                    while(self.timersId.interval.length > 0){
+                      clearInterval(self.timersId.interval.pop());
+                    }
+                    while(self.timersId.timeout.length > 0){
+                      clearInterval(self.timersId.timeout.pop());
+                    }
+                  });
+                  
                 })
             }
         }
@@ -296,18 +319,38 @@
                 'type': 'object',
                 'id': 'autopilot',
                 'properties': {
-                  'Time for Stabilization': {
-                    'description': "Duration in milliseconds",
+                  'rov_current_speed': {
+                    'description': "The speed in m/s the rov can reach with the current power level",
+                    'type': 'integer',
+                    'default': 2.2
+                  },
+                  'heading_error':{
+                    'description': "The acceptable deviation of the current heading from the target in degrees",
+                    'type': 'integer',
+                    'default': 10
+                  },
+                  'depth_error':{
+                    'description': "The acceptable deviation of the current depth from the target in meters",
+                    'type': 'integer',
+                    'default': 5
+                  },
+                  'checking_interval':{
+                    'description': "The delay before the ROV checks again its movement status in milliseconds",
+                    'type': 'integer',
+                    'default': 100
+                  },
+                  'stabilization_time':{
+                    'description': "The time the ROV takes to stabilize when of trajectory in milliseconds",
                     'type': 'integer',
                     'default': 3000
-                  },
-                  'lastName': {
-                    'type': 'string',
-                    'default': 'Rov'
                   }
                 },
                 'required': [
-                  
+                  'rov_current_speed',
+                  'heading_error',
+                  'depth_error',
+                  'checking_interval',
+                  'stabilization_time'
                 ]
             }];
         }
