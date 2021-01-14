@@ -21,6 +21,10 @@
 
             var self = this;
 
+            /**
+             * Sends the correct movement commands to the ROV, based on the input received
+             * @param  {Object} instr Contains the instruction type and value(meters,degrees etc.)
+             */
             this.parseInstruction = function(instr){
               var type = instr.type;
               switch(type){
@@ -44,10 +48,23 @@
               }
             }
 
+            /**
+             * Maps a value from a range to another range
+             * @param  {Number} num     The number to map
+             * @param  {Number} in_min  Smallest value of the first range
+             * @param  {Number} in_max  Biggest value of the first range
+             * @param  {Number} out_min Smallest value of the second range
+             * @param  {Number} out_max Biggest value of the second range
+             * @return {Number}         The mapped value
+             */
             this.mapRange = function(num, in_min, in_max, out_min, out_max){
               return (num - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
             }
 
+            /**
+             * If there are instructions available it executes the next one. It also alerts the client that a task has started.
+             * Otherwise it resets the task index.
+             */
             this.nextInstruction = function(){
               if(self.instructions.length > 0){
                 self.currentTaskIndex += 1;
@@ -59,18 +76,36 @@
               }
             }
 
+            /**
+             * Converts the distance to move in the time it would take at a certain speed
+             * @method
+             * @param  {Number} distance The distance the rov has to move forward, expressed in meters
+             * @return {Number}          The time (in milliseconds) it would take to move that much at the speed specified in the settings
+             */
             this.distanceToTime = function(distance){
               return (distance / self.settings.rov_current_speed) * 1000;
             }
 
+            /**
+             * Enable/Disable the ROV depth stabilization at the current depth
+             * @param  {Boolean} value true if you want to enable; false otherwise 
+             */
             this.setDepthHold = function(value){
               self.cockpitBus.emit('plugin.rovpilot.depthHold.set', {enabled:value, targetDepth: self.navigationData.depth });
             }
 
+            /**
+             * Enable/Disable the ROV heading stabilization at the current heading
+             * @param  {Boolean} value true if you want to enable; false otherwise 
+             */
             this.setHeadingHold = function(value){
               self.cockpitBus.emit('plugin.rovpilot.headingHold.set', {enabled:value, targetHeading: self.navigationData.heading });
             }
 
+            /**
+             * Controls if the ROV is moving in the correct trajectory
+             * @return {Boolean} true if is moving well; false if it needs to be stabilized
+             */
             this.isFollowingDirection = function(){
               var _heading = self.mapRange(self.navigationData.heading, -180,180, 0,360);
               var _target_heading = self.mapRange(self.headingHoldState.targetHeading, -180,180, 0,360);
@@ -222,6 +257,7 @@
                     var idTimeout = setTimeout(function(){
                       self.nextInstruction();
                     }, self.settings.stabilization_time);
+
                     self.timersId.timeout.push(idTimeout); 
                   } 
                 }),
