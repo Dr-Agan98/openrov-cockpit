@@ -131,8 +131,10 @@
                     self.cockpitBus.emit( 'plugin.autopilot.settingsChange', self.settings );
                 }),
                 
+                //Starts the route by executing the first instruction
                 start: new Listener( self.cockpitBus, 'plugin.autopilot.start', false, function(instructionList)
                 {
+                    // For some reason if the depth hold is enabled when its already enabled it sets the hold target at 0 meters
                     self.setDepthHold( false );
                     self.setDepthHold( true );
                     self.setHeadingHold( true );
@@ -145,21 +147,25 @@
                     self.nextInstruction();
                 }),
 
+                //Stores the navigation data continuously
                 navigationData: new Listener( self.cockpitBus,'plugin.navigationData.data', false, function(navdata)
                 {               
                   self.navigationData = navdata;
                 }),
 
+                //Stores the depth hold state every time a change is made to it
                 depthHoldState: new Listener( self.cockpitBus, 'plugin.rovpilot.depthHold.state', false, function(state)
                 {
                   self.depthHoldState = state;
                 }),
 
+                //Stores the heading hold state every time a change is made to it
                 headingHoldState: new Listener( self.cockpitBus, 'plugin.rovpilot.headingHold.state', false, function(state)
                 {
                   self.headingHoldState = state;
                 }),
 
+                //Moves forward for the specified distance in meters
                 forward: new Listener( self.cockpitBus,'plugin.autopilot.forward', false, function(distance)
                 {
                   var initialTime = Date.now();
@@ -168,9 +174,11 @@
                     self.cockpitBus.emit('plugin.autopilot.checkDistance', initialTime, distance, self.settings.checking_interval, idInterval);
                   }, self.settings.checking_interval); 
 
+                  //Stores the timer id in an array
                   self.timersId.interval.push(idInterval);
                 }),
 
+                //Rotates left for the specified number of degrees
                 left: new Listener( self.cockpitBus,'plugin.autopilot.left', false, function(degrees)
                 {
                   var startHeading = self.navigationData.heading;
@@ -184,6 +192,7 @@
                   self.cockpitBus.emit('plugin.rovpilot.rates.setYaw', -1);          
                 }),
 
+                //Rotates right for the specified number of degrees
                 right: new Listener( self.cockpitBus,'plugin.autopilot.right', false, function(degrees)
                 {
                   var startHeading = self.navigationData.heading;
@@ -197,6 +206,7 @@
                   self.cockpitBus.emit('plugin.rovpilot.rates.setYaw', 1);
                 }),
 
+                //Moves upward for the specified distance in meters
                 ascend: new Listener( self.cockpitBus,'plugin.autopilot.ascend', false, function(metersToAscend)
                 {
                   var startDepth = self.navigationData.depth;
@@ -210,6 +220,7 @@
                   self.cockpitBus.emit('plugin.rovpilot.rates.setLift', 1);
                 }),
 
+                //Moves downward for the specified distance in meters
                 descend: new Listener( self.cockpitBus,'plugin.autopilot.descend', false, function(metersToDescend)
                 {
                   var startDepth = self.navigationData.depth;
@@ -224,6 +235,7 @@
                   
                 }),
 
+                //Stops the ROV if it has already turned the specified degrees
                 checkDegrees: new Listener( self.cockpitBus,'plugin.autopilot.checkDegrees', false, function(start, degrees, idInterval)
                 {
                   var heading = self.navigationData.heading;
@@ -243,6 +255,7 @@
                   } 
                 }),
 
+                //Stops the ROV if it has already moved upwards/downwards the specified meters
                 checkDepth: new Listener( self.cockpitBus,'plugin.autopilot.checkDepth', false, function(initialDepth, meters, idInterval)
                 {
                   var currentDepth = self.navigationData.depth;
@@ -262,6 +275,8 @@
                   } 
                 }),
 
+                //Stops the ROV if it has already moved forward the specified meters
+                //If the ROV starts going off trajectory it stops it and starts the stabilization process
                 checkDistance: new Listener( self.cockpitBus,'plugin.autopilot.checkDistance', false, function(initialTime, meters, timeOffset, idInterval)
                 {
                   var currentTime = Date.now();
@@ -298,7 +313,7 @@
                   }
                 }),
 
-
+                //Stops all movement and resets all the instructions
                 abort: new Listener( self.cockpitBus,'plugin.autopilot.abort', false, function()
                 {
                   setImmediate(function(){
