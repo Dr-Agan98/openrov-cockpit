@@ -24,6 +24,7 @@ RUN \
  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \
  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && \
  nvm install 6.17.1 && \
+ ln -s "$(which node)" /usr/bin/node && \
  npm install -g yarn && \
  ln -s /root/.nvm/versions/node/v6.17.1/bin/yarn /usr/local/bin/yarn && \
  git clone https://github.com/Dr-Agan98/openrov-cockpit.git && \
@@ -31,5 +32,4 @@ RUN \
  npm run deploy:prod
 
 WORKDIR /project/openrov-cockpit
-
-ENTRYPOINT ["./start-openrov.sh"]
+ENTRYPOINT ["./start_openrov.sh"]
