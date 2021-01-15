@@ -21,7 +21,7 @@
             {
                 "plugin.autopilot.toggleMenu":
                 {
-                    description: "Toggle the menu for planning the route",
+                    description: "Toggle the menu for route planning",
                     controls:
                     {
                         button:
@@ -44,20 +44,18 @@
                 }
             };
 
+            //Gets called when alt+2 is pressed
             this.toggleMenu = function(){
                 this.cockpit.emit( 'plugin.autopilot.toggleMenu' );
             }
 
-            this.putInstruction = function(index){
-                var instruction = new Object();
-                self.route[index] = instruction;
-            }
-
+            // Adds a new instruction to the route
             this.addInstruction = function(){
                 var listItem = document.createElement('li');
                 listItem.style.marginTop = '5px'
                 var itemSelect = document.createElement('select');
                 itemSelect.setAttribute('name','instr');
+                //Creates all the options for movement
                 var selectOption1 = document.createElement('option');
                 selectOption1.setAttribute('value','frw');
                 selectOption1.textContent = 'Forward';
@@ -90,11 +88,25 @@
                 list.appendChild(listItem);
             }
 
+            // Sends a message to the ROV to abort the mission
             this.abortRoute = function(){
                 self.cockpit.rov.emit('plugin.autopilot.abort');
-                console.log(self.settings);
+                var tasks = document.getElementById("route").getElementsByTagName('li');
+                Array.from(tasks).forEach(element => {
+                    element.style.backgroundColor = 'rgba(255,0,0,0.98)';
+                });
             }
 
+            //Replaces all the instruction in the HUD with a single new one
+            this.clearInstructions = function(){
+                var tasks = document.getElementById("route").getElementsByTagName('li');
+                Array.from(tasks).forEach(element => {
+                    element.remove();
+                });
+                self.addInstruction();
+            }
+
+            //Sets the style of the HUD
             this.setStyle = function(tag, list, abort){
                 tag.style.width = '40vw';
                 tag.style.height = '25vh';
@@ -112,6 +124,7 @@
                 abort.style.color = 'red';
             }
 
+            // Injects all the HTML needed for the HUD
             this.injectHUD = function(self){
                 var tag = document.createElement("div");
                 tag.setAttribute("id","routeContainer");
@@ -123,24 +136,33 @@
                 start.setAttribute('type','button');
                 start.setAttribute('name','start');
                 start.setAttribute('value','Start');
+
+                //Adds callback that sends the instructions(tasks) to the rov
                 start.addEventListener("click", function(){
                     var instructions = [];
                     var route = document.getElementById('route');
-                    var listItem = route.getElementsByTagName("li");
-                    for(var i=0; i<listItem.length; i++){
-                        var selected = listItem[i].getElementsByTagName('select')[0].value;
-                        var val = listItem[i].getElementsByTagName('input')[0].value;
+                    var listItems = route.getElementsByTagName("li");
+                    Array.from(listItems).forEach(listItem => {
+                        listItem.style.backgroundColor = 'rgba(0,0,0,0)';
+                        var selected = listItem.getElementsByTagName('select')[0].value;
+                        var val = listItem.getElementsByTagName('input')[0].value;
                         var instruction = { type:selected, value:val };
                         instructions.push(instruction);
-                    }
+                    });
                     self.cockpit.rov.emit('plugin.autopilot.start',instructions);
                 });
 
                 var add = document.createElement('input');
                 add.setAttribute('type','button');
                 add.setAttribute('name','add');
-                add.setAttribute('value','add');
+                add.setAttribute('value','Add');
                 add.addEventListener("click", self.addInstruction);
+
+                var clear = document.createElement('input');
+                clear.setAttribute('type','button');
+                clear.setAttribute('name','clear');
+                clear.setAttribute('value','Clear');
+                clear.addEventListener("click", self.clearInstructions);
 
                 var abort = document.createElement('input');
                 abort.setAttribute('type','button');
@@ -150,6 +172,7 @@
 
                 tag.appendChild(list);
                 tag.appendChild(add);
+                tag.appendChild(clear);
                 tag.appendChild(abort);
                 tag.appendChild(start);
                 document.getElementById('mainContent').appendChild(tag);
@@ -171,7 +194,6 @@
             {
                 // Copy settings
                 self.settings = settings;
-
                 // Re-emit on cockpit
                 self.cockpit.emit( 'plugin.autopilot.settingsChange', settings );
             });
@@ -181,11 +203,11 @@
             {
                 // Log the message!
                 console.log( "Autopilot Plugin says: " + message );
-
                 // Rebroadcast for other plugins and widgets in the browser
                 self.cockpit.emit( 'plugin.autopilot.message', message );
             });
 
+            // Updates the task status in the UI upon receiving it from the ROV
             this.cockpit.rov.withHistory.on('plugin.autopilot.task-state', function( taskState, taskId )
             {
                 console.log( "Task " + taskId + " " + taskState);
@@ -201,16 +223,19 @@
                 
             });
 
+            // When alt+2 is pressed toggles the HUD
             this.cockpit.on('plugin.autopilot.toggleMenu', function()
             {
                 var hud = document.getElementById('routeContainer');
                 
+                //Adds the HTML if not already present in the DOM
                 if(hud === null){
                     self.injectHUD(self);
                     hud = document.getElementById('routeContainer');
                     self.isHUDVisible = false;
                 }
                 
+                //Toggles the HUD visibility
                 if( self.isHUDVisible === false){
                     hud.style.display = 'block';
                     self.isHUDVisible = true; 
