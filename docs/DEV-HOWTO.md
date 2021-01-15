@@ -1,11 +1,27 @@
 ### How to develop without the embedded computer
 This section covers development on your laptop or desktop.  This approach passes flags to the cockpit process which replace actualy interfaces to the hardware with "mock" interfaces that act like the underlying hardware.
 
-Prerequisites:
+You can install the software manually or build an image from a Dockerfile you can fide in the project.
+### Docker Installation
+Build an image using the Dockerfile in the project. When starting the container you need to map some ports:
+```
+....  -p 8080:8080 -p 8200:8200  ....
+```
+After the container has started you only need to connect to `http://localhost:8080` to bring up the cockpit.
+
+### Manual Installation
+#### Prerequisites:
+* You have installed Node version 6.x (Tested with 6.17.1) - Reccomend using nvm (https://github.com/nvm-sh/nvm)
+* You have installed yarn (Reccomend installing with npm) - You will need to make a symbolic link in /usr/local/bin of yarn
+* You have installed ffmpeg if using the mock video options
+* You have installed python
+* You have installed g++
+* You have installed gcc
+* You have installed make
+* You have installed mjpg-streamer (https://github.com/jacksonliam/mjpg-streamer)
 * You have done a git clone of the openrov-cockpit repository
 * Are *NOT* running as root (that requires additional flags when doing the install)
 * You are not running on ARM (there were some intel only development dependencies that will break the default install)
-* If using the mock video options, FFMPEG needs to be installed on your machine.
 
 Step 1: Installation
 You need to install all of the dependencies that are needed.  You do need an active internet connection when running this command.
@@ -23,7 +39,7 @@ set npm_config_shrinkwrap=true
 npm install
 ```
 
-> If you want to install the development dependencies for the system you have to ignore the shrinkwrap settings:
+> NOT RECCOMENDED! If you want to install the development dependencies for the system you have to ignore the shrinkwrap settings:
 
 Linuxs /OSX:
 ```
@@ -36,7 +52,6 @@ set NODE_ENV=development
 set npm_config_shrinkwrap=false
 npm install
 ```
-
 
 This will go through all of the directories and look for bower.json files and package.json files and install them.  It will take a few minutes to run.  The goemux project will show some error messages when installing on Intel hardware.  Those can be ignored as the project is setup as an optional dependency and will just keep going.  The install should exit cleanly:
 
@@ -53,30 +68,25 @@ npm WARN OpenROV-Cockpit@30.1.0 No license field.
 [brian@Babs openrov-cockpit]$
 ```
 
-The node process expects certain environment flags to be set to change its behavior.  You can override all of the settings that are stored in the config files from the command-line.
+#### Starting OpenROV
+To start the system you only need to launch a script from the project root directory.
+```
+.\start_openrov.sh
+```
+The node process expects certain environment flags to be set to change its behavior. You can change them from inside the script.
 
 > Windows users: You have to setup the environment variables manually before executing the node command
 
-The minimal items that need to be specified to run in a mock mode are:
+Here are some the environment flags you can change:
 * USE_MOCK=true : Cockpit will load mock dependencies in place of the real ones (which also generate fake runtime events)
 * HARDWARE_MOCK=true : Cockpit will load a mock MCU interface, simulating the firmware.
 * configfile='<path'> : The location to read/write the rovconfig.json file.  Your account needs access to this location.
 * pluginsDownloadDirectory='/tmp/plugins' : Folder that will be created if missing, for downloading plugins
-
-```
-USE_MOCK=true HARDWARE_MOCK=true configfile='/tmp/rovconfig.json' pluginsDownloadDirectory='/tmp/plugins' node src/cockpit.js
-```
-
-The minimal command line will start the node process, allowing you to connect to `http://localhost:8080` which will bring up the cockpit.  The mock dependencies will be sending fake data over the message bus causing compass dials to rotate etc.  The minimal command line will not start any video.
-
-Some of the more common advanced command line options:
 * MOCK_VIDEO_TYPE=MJPEG or MOCK_VIDEO_TYPE=GEOMUX (Chooses which video service to use in mock mode)
 * MOCK_VIDEO_HARDWARE=true (Makes the video service generate mock data, rather than use real hardware)
 * env plugins__ui-manager__selectedUI='classic-ui': Override the default theme that is loaded  (the env command on linux is needed since the theme name contains a dash.
 
-```
-USE_MOCK=true DEV_MODE=true HARDWARE_MOCK=true MOCK_VIDEO_TYPE=GEOMUX MOCK_VIDEO_HARDWARE=true configfile='/tmp/rovconfig.json' pluginsDownloadDirectory='/tmp/plugins' env plugins__ui-manager__selectedUI='classic-ui'  node src/cockpit.js
-```
+The script will start the node process, allowing you to connect to `http://localhost:8080` which will bring up the cockpit.  The mock dependencies will be sending fake data over the message bus causing compass dials to rotate etc.
 
 ### Debugging the node processes
 There are lots of tools for developing and debugging.  We include Cloud9 IDE on the ROV image that we distribute.  When developing locally pick your tool of choice.

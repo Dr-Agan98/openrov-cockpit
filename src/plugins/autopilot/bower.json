@@ -1,7 +1,7 @@
 {
   "name": "openrov-plugin-autopilot",
-  "description": "The best project ever.",
-  "version": "0.0.0",
+  "description": "Plugin that implements semi-autonomous movement.",
+  "version": "0.0.1",
   "homepage": "",
   "main": "public/js/autopilot.js",
   "keywords": [

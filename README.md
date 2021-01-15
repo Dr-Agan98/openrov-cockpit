@@ -25,7 +25,7 @@ Built on the latest and greatest web standards, Cockpit works with embedded Linu
 
 
 # Getting started
-The fastest way to see the software running if your don't already have it installed on a robot is to follow [these](docs/DEV-HOWTO.md) instructions to get it running on your local computer.
+The fastest way to see the software running if your don't already have it installed on a robot is to follow [these](docs/DEV-HOWTO.md) instructions to get it running on your local computer. There you will also find all the pre-requisites needed to build a correctly functioning environment.
 
 # Branches and Tags
 Branches:
@@ -47,14 +47,9 @@ Tags:
 
 openrov-cockpit is one of several packages that are combined together to enable control of an ROV.  Refer to the [openrov-software](https://github.com/OpenROV/openrov-software) for a list of the other packages.
 
-### Requirements to run locally (vs embedded on a robot)
-- USB webcam:  UVC compatible camera that supports MJPEG compression
-- mjpg-streamer:  [http://sourceforge.net/projects/mjpg-streamer/](http://sourceforge.net/projects/mjpg-streamer/)
-- ffmpeg: (to simulate the h.264 video pipeline)
-- Node.js:  [http://nodejs.org/](http://nodejs.org/)
+### Embedding in Robotic Systems
 
 For embedding in the robotic system, openrov-cockpit is typically installed with several other packages that also include drivers and configuration for various hardware solutions.  We provide images for the OpenROV products. If you have questions about installing on other devices, reach out to us on Gitter or the [OpenROV Forums](http://forum.openrov.com).
-
 
 # How to Contribute
 
