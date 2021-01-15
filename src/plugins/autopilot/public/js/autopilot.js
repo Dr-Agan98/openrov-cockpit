@@ -99,6 +99,7 @@
 
             //Replaces all the instruction in the HUD with a single new one
             this.clearInstructions = function(){
+                self.abortRoute();
                 var tasks = document.getElementById("route").getElementsByTagName('li');
                 Array.from(tasks).forEach(element => {
                     element.remove();
