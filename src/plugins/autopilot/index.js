@@ -383,17 +383,17 @@
                   'rov_current_speed': {
                     'description': "The speed in m/s the rov can reach with the current power level",
                     'type': 'integer',
-                    'default': 2.2
+                    'default': 2
                   },
                   'heading_error':{
                     'description': "The acceptable deviation of the current heading from the target in degrees",
                     'type': 'integer',
-                    'default': 10
+                    'default': 30
                   },
                   'depth_error':{
                     'description': "The acceptable deviation of the current depth from the target in meters",
                     'type': 'integer',
-                    'default': 5
+                    'default': 10
                   },
                   'checking_interval':{
                     'description': "The delay before the ROV checks again its movement status in milliseconds",
