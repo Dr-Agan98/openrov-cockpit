@@ -188,7 +188,11 @@
         // so that the reference to this instance is available for further processing
         listen() 
         {
-            var self = this;
+            var self = this;         
+            
+            /*this.cockpit.on('x-h264-video.data', function(data){
+                self.localData = data;
+            });*/
 
             // Listen for settings from the node plugin
             this.cockpit.rov.withHistory.on('plugin.autopilot.settingsChange', function(settings)
@@ -228,6 +232,8 @@
             this.cockpit.on('plugin.autopilot.toggleMenu', function()
             {
                 var hud = document.getElementById('routeContainer');
+                //var mc = document.getElementById("mainContent");
+                //var video = document.createElement("div");
                 
                 //Adds the HTML if not already present in the DOM
                 if(hud === null){
@@ -240,6 +246,20 @@
                 if( self.isHUDVisible === false){
                     hud.style.display = 'block';
                     self.isHUDVisible = true; 
+
+                    var video = document.getElementById('camera1').shadowRoot.getElementById('camera1').shadowRoot.getElementById('video');
+                    console.log(video);
+                    var canvas = document.createElement("canvas");
+                    canvas.setAttribute('width','300px');
+                    canvas.setAttribute('height','200px');
+                    var context = canvas.getContext('2d');
+                    context.drawImage(video, 0, 0, 300, 200);
+                    var dataURL = canvas.toDataURL();
+                    //create img
+                    var img = document.createElement('img');
+                    img.setAttribute('src', dataURL);
+                    //append img in container div
+                    document.getElementById('routeContainer').appendChild(img);
                 }else{
                     hud.style.display = 'none';
                     self.isHUDVisible = false;   
