@@ -1,11 +1,11 @@
 (function(window) 
 {
     'use strict';
-    class ObjectDetection 
+    class ObjectRecognition
     {
         constructor( cockpit )
         {
-            console.log('Object Detection Plugin running');
+            console.log('Object Recognition Plugin running');
 
             var self = this;
             self.cockpit = cockpit;
@@ -15,15 +15,15 @@
             //Set up actions associated with this plugin
             this.actions = 
             {
-                "plugin.objectDetection.toggleObjDetection":
+                "plugin.objectRecognition.toggleObjRecognition":
                 {
-                    description: "Toggles the object detection service",
+                    description: "Toggles the object recognition service",
                     controls:
                     {
                         button:
                         {
                             down: function() {
-                                self.toggleObjDetection();
+                                self.toggleObjRecognition();
                             }
                         }
                     }
@@ -36,18 +36,18 @@
                 keyboard:
                 {
                     "alt+3": { type: "button",
-                               action: "plugin.objectDetection.toggleObjDetection"}
+                               action: "plugin.objectRecognition.toggleObjRecognition"}
                 }
             };
 
-            this.toggleObjDetection = function(){
-                this.cockpit.emit("plugin.objectDetection.toggleObjDetection");       
+            this.toggleObjRecognition = function(){
+                this.cockpit.emit("plugin.objectRecognition.toggleObjRecognition");       
             };
         };
 
         listen() 
         {
-            this.cockpit.on('plugin.objectDetection.toggleObjDetection', function()
+            this.cockpit.on('plugin.objectRecognition.toggleObjRecognition', function()
             {
                 var vd_container = document.getElementById('camera1').shadowRoot.getElementById('camera1').shadowRoot.getElementById("videocontainer");
                 var video = document.getElementById('camera1').shadowRoot.getElementById('camera1').shadowRoot.getElementById('camera1');
@@ -97,7 +97,7 @@
 
     // Add plugin to the window object and add it to the plugins list
     var plugins = namespace('plugins');
-    plugins.ObjectDetection = ObjectDetection;
-    window.Cockpit.plugins.push( plugins.ObjectDetection );
+    plugins.ObjectRecognition = ObjectRecognition;
+    window.Cockpit.plugins.push( plugins.ObjectRecognition );
 
 }(window));
